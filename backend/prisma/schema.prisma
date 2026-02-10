@@ -1,0 +1,758 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USER & AUTHENTICATION
+// ============================================
+
+enum UserRole {
+  ADMIN
+  FRANCHISE_OWNER
+}
+
+enum UserStatus {
+  PENDING    // Franchise owner waiting for admin approval
+  ACTIVE     // Approved and can login
+  REJECTED   // Rejected by admin
+  SUSPENDED  // Temporarily disabled
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String   // Hashed
+  name      String
+  phone     String?
+  role      UserRole
+  status    UserStatus @default(PENDING)
+  
+  // For franchise owners
+  franchise Franchise?
+  
+  // Messages received (for franchise owners)
+  receivedMessages Message[] @relation("OwnerMessages")
+  
+  // Conversations (for franchise owners)
+  conversations Conversation[] @relation("OwnerConversations")
+  
+  // Leads assigned to this user
+  assignedLeads Lead[] @relation("AssignedLeads")
+  
+  // Tickets assigned to this user
+  assignedTickets Ticket[] @relation("AssignedTickets")
+  
+  // Notifications
+  notifications Notification[] @relation("UserNotifications")
+  
+  // User activities for analytics
+  activities UserActivity[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  lastLogin DateTime?
+  
+  @@index([email])
+  @@index([role])
+  @@index([status])
+}
+
+// ============================================
+// FRANCHISE PROFILE
+// ============================================
+
+enum FranchiseStatus {
+  DRAFT       // Owner editing, not submitted
+  PENDING     // Submitted, waiting admin approval
+  PUBLISHED   // Live on marketplace
+  REJECTED    // Admin rejected
+  UNPUBLISHED // Was published but hidden
+}
+
+enum Category {
+  RESTAURANTS
+  RETAIL
+  SERVICES
+  HEALTH
+  EDUCATION
+  FASHION
+  CAFE
+  OTHER
+}
+
+model Franchise {
+  id          String   @id @default(uuid())
+  
+  // Ownership
+  ownerId     String   @unique
+  owner       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  
+  // Basic Info
+  name        String
+  slug        String   @unique  // URL-friendly name
+  tagline     String?   // "فخور بتقديم أطعم أكل سعودي"
+  description String?   @db.Text
+  logo        String?   // Cloudinary URL
+  coverImage  String?   // Hero image
+  
+  // Categorization
+  category    Category
+  country     String    // Saudi Arabia, UAE, etc.
+  city        String    // Riyadh, Dubai, etc.
+  
+  // Status
+  status      FranchiseStatus @default(DRAFT)
+  publishedAt DateTime?
+  
+  // Financial Data
+  investment  InvestmentDetails?
+  
+  // Characteristics & Stats
+  stats       FranchiseStat[]
+  characteristics FranchiseCharacteristic[]
+  
+  // Gallery
+  gallery     GalleryImage[]
+  
+  // Messages/Leads
+  messages    Message[]
+  messageCount Int @default(0)  // Denormalized for quick access
+
+  // Chat & CRM Relations
+  conversations Conversation[]
+  leads       Lead[]
+
+  // Analytics
+  activities  UserActivity[]
+  
+  // Metadata
+  views       Int @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([status])
+  @@index([category])
+  @@index([country])
+  @@index([city])
+  @@index([status, category])
+  @@index([status, country])
+}
+
+model InvestmentDetails {
+  id                String    @id @default(uuid())
+  franchiseId       String    @unique
+  franchise         Franchise @relation(fields: [franchiseId], references: [id], onDelete: Cascade)
+  
+  // Investment ranges (in USD for consistency)
+  minInvestment     Int       // 50000
+  maxInvestment     Int       // 150000
+  
+  // Fees
+  franchiseFee      Int?      // 200000 (SAR or USD)
+  franchiseFeeLocal String?   // "SAR" or "USD"
+  franchiseFeeIntl  Int?      // 50000 (for international)
+  royaltyFee        String?   // "4% - 3%"
+  marketingFee      String?   // "1%"
+  
+  // Additional costs
+  equipmentCost     Int?      // 700000
+  equipmentCurrency String?   // "SAR" or "USD"
+}
+
+model FranchiseStat {
+  id          String    @id @default(uuid())
+  franchiseId String
+  franchise   Franchise @relation(fields: [franchiseId], references: [id], onDelete: Cascade)
+  
+  label       String    // "عدد الفروع"
+  value       String    // "21"
+  suffix      String?   // "+"
+  subtext     String?   // "Flagship Store: 400-600 Sq. M."
+  icon        String?   // Icon identifier or image URL
+  order       Int       // Display order
+  
+  @@index([franchiseId])
+}
+
+model FranchiseCharacteristic {
+  id          String    @id @default(uuid())
+  franchiseId String
+  franchise   Franchise @relation(fields: [franchiseId], references: [id], onDelete: Cascade)
+  
+  title       String    // "نسبة حقوق الامتياز"
+  value       String?   // "200,000 SAR"
+  items       String[]  // List of bullet points
+  icon        String?   // Icon image URL
+  order       Int       // Display order
+  
+  @@index([franchiseId])
+}
+
+model GalleryImage {
+  id          String    @id @default(uuid())
+  franchiseId String
+  franchise   Franchise @relation(fields: [franchiseId], references: [id], onDelete: Cascade)
+  
+  url         String    // Cloudinary URL
+  alt         String?
+  order       Int       // Display order
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([franchiseId])
+}
+
+// ============================================
+// MESSAGES & LEADS
+// ============================================
+
+enum MessageStatus {
+  UNREAD
+  READ
+  ARCHIVED
+}
+
+model Message {
+  id          String   @id @default(uuid())
+  
+  // Sender info (visitor - no user account)
+  senderName  String
+  senderEmail String
+  senderPhone String?
+  
+  // Message content
+  subject     String?
+  content     String   @db.Text
+  
+  // Related franchise
+  franchiseId String
+  franchise   Franchise @relation(fields: [franchiseId], references: [id], onDelete: Cascade)
+  
+  // Recipient (franchise owner)
+  ownerId     String
+  owner       User     @relation("OwnerMessages", fields: [ownerId], references: [id], onDelete: Cascade)
+  
+  // Status
+  status      MessageStatus @default(UNREAD)
+  readAt      DateTime?
+  
+  // Metadata
+  ipAddress   String?   // For spam detection
+  userAgent   String?   // For analytics
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([franchiseId])
+  @@index([ownerId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ============================================
+// ADMIN & AUDIT
+// ============================================
+
+model AdminLog {
+  id          String   @id @default(uuid())
+  adminId     String   // Who performed the action
+  action      String   // "FRANCHISE_APPROVED", "USER_REJECTED", etc.
+  targetType  String   // "Franchise", "User", "Message"
+  targetId    String   // ID of the affected entity
+  details     Json?    // Additional context
+  createdAt   DateTime @default(now())
+  
+  @@index([adminId])
+  @@index([createdAt])
+}
+
+// ============================================
+// SYSTEM CONFIG
+// ============================================
+
+model Config {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       Json
+  updatedAt   DateTime @updatedAt
+}
+
+// ============================================
+// ANALYTICS & TRACKING
+// ============================================
+
+model PageView {
+  id          String   @id @default(uuid())
+  page        String   // Page path
+  referrer    String?  // Referrer URL
+  userAgent   String?  // Browser info
+  ip          String?  // IP address (masked)
+  sessionId   String?  // Session identifier
+  timestamp   DateTime @default(now())
+  
+  @@index([timestamp])
+  @@index([page])
+  @@index([sessionId])
+}
+
+model UserActivity {
+  id          String   @id @default(uuid())
+  type        String   // view, inquiry, compare, simulator, booking, share, newsletter
+  details     String?  // Additional info
+  
+  franchiseId String?
+  franchise   Franchise? @relation(fields: [franchiseId], references: [id], onDelete: SetNull)
+  
+  userId      String?
+  user        User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  ip          String?
+  userAgent   String?
+  timestamp   DateTime @default(now())
+  
+  @@index([timestamp])
+  @@index([type])
+  @@index([franchiseId])
+  @@index([userId])
+}
+
+// ============================================
+// CHAT SYSTEM (Real-time messaging)
+// ============================================
+
+enum ChatParticipantType {
+  VISITOR      // Anonymous investor
+  INVESTOR     // Registered investor
+  OWNER        // Franchise owner
+  ADMIN        // Admin
+  SUPPORT      // Support agent
+}
+
+enum ConversationStatus {
+  ACTIVE       // Conversation is ongoing
+  CLOSED       // Closed by owner/admin
+  ARCHIVED     // Archived for reference
+}
+
+enum ChatMessageStatus {
+  SENT
+  DELIVERED
+  READ
+  FAILED
+}
+
+model Conversation {
+  id          String   @id @default(uuid())
+  
+  // Related franchise
+  franchiseId String
+  franchise   Franchise @relation(fields: [franchiseId], references: [id], onDelete: Cascade)
+  
+  // Owner (recipient)
+  ownerId     String
+  owner       User     @relation("OwnerConversations", fields: [ownerId], references: [id], onDelete: Cascade)
+  
+  // Participant info (could be visitor or registered user)
+  participantType ChatParticipantType
+  participantId   String?    // If registered user
+  participantName String     // Display name
+  participantEmail String?   // For notifications
+  participantPhone String?   // For SMS notifications
+  
+  // Conversation status
+  status      ConversationStatus @default(ACTIVE)
+  
+  // Metadata
+  subject     String?    // Topic of conversation
+  source      String     // "profile_page", "chat_widget", "lead_form"
+  priority    String     @default("normal") // low, normal, high, urgent
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  lastMessageAt DateTime @default(now())
+  closedAt    DateTime?
+  
+  // Relations
+  messages    ChatMessage[]
+  notes       ChatNote[]
+  
+  // Statistics (denormalized for performance)
+  messageCount Int @default(0)
+  unreadCount Int @default(0)
+  
+  @@index([franchiseId])
+  @@index([ownerId])
+  @@index([status])
+  @@index([lastMessageAt])
+  @@index([participantType, participantId])
+}
+
+model ChatMessage {
+  id          String   @id @default(uuid())
+  
+  // Conversation
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  // Sender info
+  senderType  ChatParticipantType
+  senderId    String?    // If registered user
+  senderName  String     // Display name
+  
+  // Content
+  content     String     @db.Text
+  contentType String     @default("text") // text, image, file, location, contact
+  attachmentUrl String?  // For images/files
+  
+  // Status
+  status      ChatMessageStatus @default(SENT)
+  readAt      DateTime?
+  deliveredAt DateTime?
+  
+  // Metadata
+  ipAddress   String?
+  userAgent   String?
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([conversationId])
+  @@index([senderType, senderId])
+  @@index([createdAt])
+  @@index([status])
+}
+
+model ChatNote {
+  id          String   @id @default(uuid())
+  
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  // Who added the note
+  authorId    String
+  authorName  String
+  authorRole  ChatParticipantType
+  
+  // Content
+  content     String
+  
+  // Note type
+  noteType    String     @default("internal") // internal, follow_up, reminder
+  
+  // For follow-up notes
+  reminderAt  DateTime?
+  isCompleted Boolean    @default(false)
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([conversationId])
+  @@index([authorId])
+  @@index([createdAt])
+}
+
+// ============================================
+// CRM SYSTEM (Lead & Customer Management)
+// ============================================
+
+enum LeadStatus {
+  NEW          // Fresh lead
+  CONTACTED    // Initial contact made
+  QUALIFIED    // Qualified prospect
+  PROPOSAL     // Proposal sent
+  NEGOTIATION  // In negotiation
+  WON          // Deal won
+  LOST         // Deal lost
+  COLD         // Cold lead
+}
+
+enum LeadSource {
+  WEBSITE_CHAT
+  PROFILE_INQUIRY
+  LANDING_PAGE
+  REFERRAL
+  SOCIAL_MEDIA
+  EMAIL_CAMPAIGN
+  PHONE_CALL
+  WALK_IN
+  OTHER
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_CUSTOMER
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum FollowUpType {
+  CALL
+  EMAIL
+  MEETING
+  SMS
+  WHATSAPP
+}
+
+model Lead {
+  id          String   @id @default(uuid())
+  
+  // Lead info
+  name        String
+  email       String?
+  phone       String?
+  
+  // Interest details
+  interestType String   // "franchise", "partnership", "investment", "general"
+  franchiseId String?   // If interested in specific franchise
+  franchise   Franchise? @relation(fields: [franchiseId], references: [id], onDelete: SetNull)
+  
+  // Lead status & source
+  status      LeadStatus @default(NEW)
+  source      LeadSource @default(WEBSITE_CHAT)
+  
+  // Assignment
+  assignedToId String?   // Owner or admin assigned
+  assignedTo   User?     @relation("AssignedLeads", fields: [assignedToId], references: [id], onDelete: SetNull)
+  
+  // Lead scoring (0-100)
+  score       Int        @default(0)
+  
+  // Estimated value
+  estimatedInvestment Int?
+  timeline    String?    // "immediate", "1_month", "3_months", "6_months", "1_year"
+  
+  // Notes
+  notes       String?    @db.Text
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  firstContactAt DateTime?
+  lastContactAt DateTime?
+  convertedAt DateTime?
+  
+  // Relations
+  activities  LeadActivity[]
+  tickets     Ticket[]
+  followUps   FollowUp[]
+  tags        LeadTag[]
+  
+  // Metadata
+  ipAddress   String?
+  userAgent   String?
+  referrer    String?
+  
+  @@index([status])
+  @@index([assignedToId])
+  @@index([franchiseId])
+  @@index([createdAt])
+  @@index([score])
+}
+
+model LeadActivity {
+  id          String   @id @default(uuid())
+  
+  leadId      String
+  lead        Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  
+  // Activity details
+  type        String   // "status_change", "note_added", "email_sent", "call_made", "meeting_scheduled", "proposal_sent", "follow_up"
+  description String
+  
+  // Who performed the action
+  performedById String
+  performedByName String
+  performedByRole String
+  
+  // Old and new values (for status changes)
+  oldValue    String?
+  newValue    String?
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([leadId])
+  @@index([createdAt])
+}
+
+model Ticket {
+  id          String   @id @default(uuid())
+  
+  // Ticket identification
+  ticketNumber String   @unique // T-2024-00001
+  
+  // Related lead or conversation
+  leadId      String?
+  lead        Lead?    @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  
+  conversationId String?
+  
+  // Ticket details
+  subject     String
+  description String   @db.Text
+  
+  // Categorization
+  category    String   // "technical", "billing", "inquiry", "complaint", "partnership", "other"
+  priority    TicketPriority @default(MEDIUM)
+  status      TicketStatus @default(OPEN)
+  
+  // Assignment
+  assignedToId String?
+  assignedTo   User?   @relation("AssignedTickets", fields: [assignedToId], references: [id], onDelete: SetNull)
+  
+  // Requester
+  requesterName String
+  requesterEmail String?
+  requesterPhone String?
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  resolvedAt  DateTime?
+  closedAt    DateTime?
+  
+  // Relations
+  responses   TicketResponse[]
+  
+  @@index([status])
+  @@index([assignedToId])
+  @@index([priority])
+  @@index([createdAt])
+}
+
+model TicketResponse {
+  id          String   @id @default(uuid())
+  
+  ticketId    String
+  ticket      Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  
+  // Response details
+  content     String   @db.Text
+  isInternal  Boolean  @default(false) // Internal notes vs public response
+  
+  // Who responded
+  responderId String
+  responderName String
+  responderRole String
+  
+  // For internal notes
+  isNote      Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([ticketId])
+  @@index([createdAt])
+}
+
+model FollowUp {
+  id          String   @id @default(uuid())
+  
+  // Related to lead or conversation
+  leadId      String?
+  lead        Lead?    @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  
+  conversationId String?
+  
+  // Follow-up details
+  type        FollowUpType
+  title       String
+  description String?
+  
+  // Scheduling
+  scheduledAt DateTime
+  duration    Int      @default(30) // Duration in minutes
+  
+  // Status
+  status      String     @default("scheduled") // scheduled, completed, cancelled, no_show
+  
+  // Who created and with whom
+  createdById String
+  withPerson  String   // Name of person to follow up with
+  withEmail   String?
+  withPhone   String?
+  
+  // Outcome
+  outcome     String?
+  completedAt DateTime?
+  
+  // Reminders
+  reminderSent Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([leadId])
+  @@index([conversationId])
+  @@index([scheduledAt])
+  @@index([status])
+}
+
+model LeadTag {
+  id          String   @id @default(uuid())
+  
+  leadId      String
+  lead        Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  
+  tag         String
+  color       String   @default("#3B82F6") // Hex color code
+  
+  createdAt   DateTime @default(now())
+  
+  @@unique([leadId, tag])
+  @@index([leadId])
+}
+
+// ============================================
+// NOTIFICATIONS
+// ============================================
+
+enum NotificationType {
+  NEW_MESSAGE
+  NEW_LEAD
+  LEAD_STATUS_CHANGE
+  TICKET_CREATED
+  TICKET_RESPONSE
+  FOLLOW_UP_REMINDER
+  SYSTEM
+}
+
+model Notification {
+  id          String   @id @default(uuid())
+  
+  // Recipient
+  userId      String
+  user        User     @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Notification details
+  type        NotificationType
+  title       String
+  content     String
+  
+  // Related entity
+  entityType  String?  // "conversation", "lead", "ticket", "message"
+  entityId    String?  // ID of related entity
+  
+  // Status
+  isRead      Boolean  @default(false)
+  readAt      DateTime?
+  
+  // Action button
+  actionUrl   String?  // Link to related page
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+}
+

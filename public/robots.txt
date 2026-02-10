@@ -1,0 +1,24 @@
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://franchisesgate.com/sitemap.xml
+
+# Crawl rate
+Crawl-delay: 1
+
+# Disallow admin and private pages
+Disallow: /admin/
+Disallow: /owner/
+Disallow: /login
+Disallow: /register
+Disallow: /api/
+Disallow: /*?*
+
+# Allow important pages
+Allow: /$
+Allow: /gallery
+Allow: /services
+Allow: /blog
+Allow: /contact
+Allow: /about
