@@ -42,6 +42,8 @@ const io = new Server(httpServer, {
         'http://localhost:5173',
         'http://localhost:5001',
         'http://localhost:5000',
+        'https://franchisegate.sa',
+        'http://franchisegate.sa',
         'https://lightgrey-antelope-357802.hostingersite.com',
         'https://lightgrey-antelope-357802.hostingersite.com/frontend/',
         process.env.FRONTEND_URL
@@ -190,6 +192,8 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5001',
   'http://localhost:5000',
+  'https://franchisegate.sa',
+  'http://franchisegate.sa',
   'https://lightgrey-antelope-357802.hostingersite.com',
   'https://lightgrey-antelope-357802.hostingersite.com/frontend',
   process.env.FRONTEND_URL
