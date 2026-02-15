@@ -17,6 +17,7 @@ import {
   Plus,
   Trash2
 } from 'lucide-react';
+import { API_BASE_URL } from '../config.js';
 
 const FranchiseCompare = ({ externalOpen, onClose }) => {
   const [selectedFranchises, setSelectedFranchises] = useState([]);
@@ -41,7 +42,7 @@ const FranchiseCompare = ({ externalOpen, onClose }) => {
   useEffect(() => {
     const fetchFranchises = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/gallery?limit=50');
+        const response = await fetch(`${API_BASE_URL}/api/gallery?limit=50`);
         const data = await response.json();
         if (data.data) {
           setAvailableFranchises(data.data);

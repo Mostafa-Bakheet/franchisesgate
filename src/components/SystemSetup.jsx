@@ -3,17 +3,17 @@ import React from 'react';
 const systems = [
   {
     id: 1,
-    image: '/Whisk_6dd298a7d0c0c229ec3491c6e3664b11dr 1.png',
+    image: 'Whisk_6dd298a7d0c0c229ec3491c6e3664b11dr 1.png',
     description: 'بناء الأنظمة المتابعة والتقارير لقياس الأداء وتحسين العمليات.'
   },
   {
     id: 2,
-    image: '/Whisk_6dd298a7d0c0c229ec3491c6e3664b11dr 1 (1).png',
+    image: 'Whisk_6dd298a7d0c0c229ec3491c6e3664b11dr 1 (1).png',
     description: 'تصميم الهيكل الإداري وتوصيف الوظائف والصلاحيات.'
   },
   {
     id: 3,
-    image: '/Whisk_6dd298a7d0c0c229ec3491c6e3664b11dr 1 (2).png',
+    image: 'Whisk_6dd298a7d0c0c229ec3491c6e3664b11dr 1 (2).png',
     description: 'إعداد السياسات والإجراءات التشغيلية (SOPs) لتنظيم العمل وضمان الجودة.'
   }
 ];
@@ -28,7 +28,7 @@ const SystemSetup = () => {
             إعداد الأنظمة
           </h2>
           <p className='text-dark-2/70 max-w-2xl mx-auto leading-relaxed mb-1'>
-          تنظيم وتنسيق كل الأدوات والبرامج والسياسات التي يشتغل عليها المشروع. يشمل تصميم خطوات العمل، تحديد المهام، وضبط الإجراءات لضمان انسيابية التشغيل.يساعد على تقليل الأخطاء ورفع الكفاءة وتحسين جودة الخدمة. أساسي لأي مشروع يريد إدارة منظمة وقابلة للتطوير.</p>
+        نقدّم خدمة إعداد منظومة الامتياز التجاري (الفرنشايز) بشكل متكامل، وتشمل اتفاقية منح الامتياز ووثيقة الإفصاح والدليل التشغيلي و جاهزة للاعتماد والتطبيق.</p>
           
         </div>
 
@@ -65,13 +65,17 @@ const SystemSetup = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
               {/* Content */}
             <div className="text-right">
-              <p className="text-sm text-dark-2/60 mb-2">تطوير الامتياز التجاري</p>
+              <p className="text-sm text-dark-2/60 mb-2">تطوير الامتياز التجاري الفرنشايز 
+</p>
               <h3 className="text-3xl md:text-4xl font-bold text-black mb-6 leading-tight">
-                إحدى العلامات التجارية زادت انتشارها بنسبة 40% بعد التعاون مع تمكين امتيازات.
-              </h3>
+إحدى أبرز العلامات التجارية زاد
+ انتشارها بعد إعداد منظومة
+ الامتياز التجاري (الفرنشايز)
+ بالكامل من قِبل بوابة الامتيازات              </h3>
               <p className="text-dark-2/80 text-sm leading-relaxed mb-8">
-                ساعدتنا بوفود الامتيازات في بناء نظام امتياز متكامل من خلال التشغيل إلى إتقانيات الامتياز خلال أشهر قليلة، أصبح المشروع جاهزاً للتوسع وجاهزاً بالفعل في استقبال أول مجموعة من أصحاب الامتياز.
-              </p>
+نطوّر منظومة الامتياز التجاري 
+من الصفر… لين تصير جاهزة للتوسع
+ والانتشار.              </p>
               <button className="bg-black text-white px-6 py-3 rounded-full text-sm font-semibold hover:bg-gray-800 transition-colors flex items-center gap-2 ">
                 اقرأ دراسة الحالة الكاملة
                 <svg className="w-4 h-4 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -2,7 +2,7 @@ User-agent: *
 Allow: /
 
 # Sitemap location
-Sitemap: https://franchisesgate.com/sitemap.xml
+Sitemap: https://franchisegate.sa/sitemap.xml
 
 # Crawl rate
 Crawl-delay: 1

@@ -6,6 +6,7 @@ import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
+import jwt from 'jsonwebtoken';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 
@@ -20,6 +21,9 @@ import adminRoutes from './src/routes/admin.routes.js';
 import uploadRoutes from './src/routes/upload.routes.js';
 import chatRoutes from './src/routes/chat.routes.js';
 import crmRoutes from './src/routes/crm.routes.js';
+import tickerRoutes from './src/routes/ticker.routes.js';
+import servicesRoutes from './src/routes/services.routes.js';
+import ordersRoutes from './src/routes/orders.routes.js';
 
 // Middleware
 import errorHandler, { notFound } from './src/middleware/errorHandler.js';
@@ -38,6 +42,8 @@ const io = new Server(httpServer, {
         'http://localhost:5173',
         'http://localhost:5001',
         'http://localhost:5000',
+        'https://lightgrey-antelope-357802.hostingersite.com',
+        'https://lightgrey-antelope-357802.hostingersite.com/frontend/',
         process.env.FRONTEND_URL
       ].filter(Boolean);
       
@@ -184,6 +190,8 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5001',
   'http://localhost:5000',
+  'https://lightgrey-antelope-357802.hostingersite.com',
+  'https://lightgrey-antelope-357802.hostingersite.com/frontend',
   process.env.FRONTEND_URL
 ].filter(Boolean);
 
@@ -205,10 +213,31 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Rate Limiting
+// Rate Limiting - Skip for admin users
 const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 200,
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 25 * 60 * 1000,
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 400,
+  skip: (req) => {
+    // Skip rate limiting for admin users
+    try {
+      let token = null;
+      if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+        token = req.headers.authorization.split(' ')[1];
+      } else if (req.cookies?.token) {
+        token = req.cookies.token;
+      }
+      
+      if (token) {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        // Skip if user is admin
+        return decoded.role === 'ADMIN';
+      }
+    } catch (error) {
+      // If token invalid, don't skip rate limiting
+      return false;
+    }
+    return false;
+  },
   handler: (req, res) => {
     res.status(429).json({
       success: false,
@@ -232,6 +261,21 @@ app.use(compression());
 // Static Files (for local upload testing)
 app.use('/uploads', express.static('uploads'));
 
+// Serve Frontend static files (for subdirectory deployment)
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Serve frontend from /frontend/ subdirectory
+app.use('/frontend', express.static(path.join(__dirname, '../frontend')));
+
+// Handle React Router (serve index.html for all non-API routes)
+app.get('/frontend/*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/index.html'));
+});
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/franchises', franchiseRoutes);
@@ -241,6 +285,9 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/crm', crmRoutes);
+app.use('/api/tickers', tickerRoutes);
+app.use('/api/services', servicesRoutes);
+app.use('/api/orders', ordersRoutes);
 
 // Health Check
 app.get('/api/health', (req, res) => {

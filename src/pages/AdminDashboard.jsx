@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { LayoutDashboard, Building2, Users, MessageSquare, LogOut, CheckCircle, XCircle, UserCheck, Loader2, Eye, Trash2, Edit, Search, FileText, Plus, BarChart3, HeadphonesIcon, Ticket } from 'lucide-react';
+import { LayoutDashboard, Building2, Users, MessageSquare, LogOut, CheckCircle, XCircle, UserCheck, Loader2, Eye, Trash2, Edit, Search, FileText, Plus, BarChart3, HeadphonesIcon, Ticket, ScrollText, ShoppingBag, ShoppingCart } from 'lucide-react';
 import RealtimeDashboard from '../components/RealtimeDashboard';
 import SmartNotifications from '../components/SmartNotifications';
+
+import { API_BASE_URL } from '../config.js';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -17,6 +19,46 @@ const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showArticleForm, setShowArticleForm] = useState(false);
   const [editingArticle, setEditingArticle] = useState(null);
+
+  // News Ticker state
+  const [tickers, setTickers] = useState([]);
+  const [showTickerForm, setShowTickerForm] = useState(false);
+  const [editingTicker, setEditingTicker] = useState(null);
+  const [tickerForm, setTickerForm] = useState({
+    content: '',
+    link: '',
+    bgColor: '#22C55E',
+    textColor: '#FFFFFF',
+    order: 0,
+    isActive: true,
+    startDate: '',
+    endDate: ''
+  });
+
+  // Services state
+  const [services, setServices] = useState([]);
+  const [showServiceForm, setShowServiceForm] = useState(false);
+  const [editingService, setEditingService] = useState(null);
+  const [serviceForm, setServiceForm] = useState({
+    name: '',
+    slug: '',
+    description: '',
+    shortDesc: '',
+    price: '',
+    oldPrice: '',
+    icon: '',
+    image: '',
+    bgColor: '#FFFFFF',
+    order: 0,
+    isActive: true,
+    features: []
+  });
+
+  // Orders state
+  const [orders, setOrders] = useState([]);
+  const [orderFilter, setOrderFilter] = useState('');
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [showOrderDetail, setShowOrderDetail] = useState(false);
 
   // Article form state
   const [articleForm, setArticleForm] = useState({
@@ -57,7 +99,7 @@ const AdminDashboard = () => {
       const token = localStorage.getItem('token');
       
       // Load stats
-      const statsRes = await fetch('http://localhost:5000/api/admin/dashboard', {
+      const statsRes = await fetch(`${API_BASE_URL}/api/admin/dashboard`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -66,7 +108,7 @@ const AdminDashboard = () => {
       setStats(statsData.data);
 
       // Load franchises
-      const franchisesRes = await fetch('http://localhost:5000/api/admin/franchises', {
+      const franchisesRes = await fetch(`${API_BASE_URL}/api/admin/franchises`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -76,13 +118,40 @@ const AdminDashboard = () => {
       }
 
       // Load users
-      const usersRes = await fetch('http://localhost:5000/api/admin/users', {
+      const usersRes = await fetch(`${API_BASE_URL}/api/admin/users`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
       if (usersRes.ok) {
         const usersData = await usersRes.json();
         setUsers(usersData.data || []);
+      }
+
+      // Load tickers
+      const tickersRes = await fetch(`${API_BASE_URL}/api/tickers/`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (tickersRes.ok) {
+        const tickersData = await tickersRes.json();
+        setTickers(tickersData.data || []);
+      }
+
+      // Load services
+      const servicesRes = await fetch(`${API_BASE_URL}/api/services/admin/all`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (servicesRes.ok) {
+        const servicesData = await servicesRes.json();
+        setServices(servicesData.data || []);
+      }
+
+      // Load orders
+      const ordersRes = await fetch(`${API_BASE_URL}/api/orders/`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (ordersRes.ok) {
+        const ordersData = await ordersRes.json();
+        setOrders(ordersData.data || []);
       }
     } catch (err) {
       setError(err.message);
@@ -95,7 +164,7 @@ const AdminDashboard = () => {
     if (!confirm('هل أنت متأكد من الموافقة على هذا الفرنشايز؟')) return;
     
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/franchises/${id}/status`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/franchises/${id}/status`, {
         method: 'PATCH',
         headers: getAuthHeaders(),
         body: JSON.stringify({ status: 'PUBLISHED' })
@@ -117,7 +186,7 @@ const AdminDashboard = () => {
     if (!confirm('هل أنت متأكد من رفض هذا الفرنشايز؟')) return;
     
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/franchises/${id}/status`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/franchises/${id}/status`, {
         method: 'PATCH',
         headers: getAuthHeaders(),
         body: JSON.stringify({ status: 'REJECTED' })
@@ -139,7 +208,7 @@ const AdminDashboard = () => {
     if (!confirm('هل أنت متأكد من الموافقة على هذا المستخدم؟')) return;
     
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/users/${id}/status`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/users/${id}/status`, {
         method: 'PATCH',
         headers: getAuthHeaders(),
         body: JSON.stringify({ status: 'ACTIVE' })
@@ -161,7 +230,7 @@ const AdminDashboard = () => {
     if (!confirm('هل أنت متأكد من حذف هذا الفرنشايز؟ لا يمكن التراجع عن هذا الإجراء.')) return;
     
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/franchises/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/franchises/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
@@ -182,7 +251,7 @@ const AdminDashboard = () => {
     if (!confirm('هل أنت متأكد من حذف هذا المستخدم؟ لا يمكن التراجع عن هذا الإجراء.')) return;
     
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/users/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/users/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
@@ -199,12 +268,210 @@ const AdminDashboard = () => {
     }
   };
 
+  // Ticker handlers
+  const handleSaveTicker = async () => {
+    try {
+      const url = editingTicker
+        ? `${API_BASE_URL}/api/tickers/${editingTicker.id}`
+        : `${API_BASE_URL}/api/tickers/`;
+      
+      const method = editingTicker ? 'PUT' : 'POST';
+      
+      const res = await fetch(url, {
+        method,
+        headers: getAuthHeaders(),
+        body: JSON.stringify(tickerForm)
+      });
+      
+      if (res.ok) {
+        setShowTickerForm(false);
+        setEditingTicker(null);
+        loadDashboardData();
+        alert(editingTicker ? 'تم تحديث التيكر بنجاح' : 'تم إضافة التيكر بنجاح');
+      } else {
+        const data = await res.json();
+        alert(data.message || 'فشل في حفظ التيكر');
+      }
+    } catch (err) {
+      alert('فشل في حفظ التيكر: ' + err.message);
+    }
+  };
+
+  const handleEditTicker = (ticker) => {
+    setEditingTicker(ticker);
+    setTickerForm({
+      content: ticker.content,
+      link: ticker.link || '',
+      bgColor: ticker.bgColor,
+      textColor: ticker.textColor,
+      order: ticker.order,
+      isActive: ticker.isActive,
+      startDate: ticker.startDate ? new Date(ticker.startDate).toISOString().split('T')[0] : '',
+      endDate: ticker.endDate ? new Date(ticker.endDate).toISOString().split('T')[0] : ''
+    });
+    setShowTickerForm(true);
+  };
+
+  const handleDeleteTicker = async (id) => {
+    if (!confirm('هل أنت متأكد من حذف هذا التيكر؟')) return;
+    
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/tickers/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      
+      if (res.ok) {
+        setTickers(tickers.filter(t => t.id !== id));
+        alert('تم حذف التيكر بنجاح');
+      } else {
+        const data = await res.json();
+        alert(data.message || 'فشل في حذف التيكر');
+      }
+    } catch (err) {
+      alert('فشل في حذف التيكر: ' + err.message);
+    }
+  };
+
+  // Service handlers
+  const handleSaveService = async () => {
+    try {
+      const url = editingService
+        ? `${API_BASE_URL}/api/services/${editingService.id}`
+        : `${API_BASE_URL}/api/services/`;
+      
+      const method = editingService ? 'PUT' : 'POST';
+      
+      const res = await fetch(url, {
+        method,
+        headers: getAuthHeaders(),
+        body: JSON.stringify(serviceForm)
+      });
+      
+      if (res.ok) {
+        setShowServiceForm(false);
+        setEditingService(null);
+        loadDashboardData();
+        alert(editingService ? 'تم تحديث الخدمة بنجاح' : 'تم إضافة الخدمة بنجاح');
+      } else {
+        const data = await res.json();
+        alert(data.message || 'فشل في حفظ الخدمة');
+      }
+    } catch (err) {
+      alert('فشل في حفظ الخدمة: ' + err.message);
+    }
+  };
+
+  const handleEditService = (service) => {
+    setEditingService(service);
+    setServiceForm({
+      name: service.name,
+      slug: service.slug,
+      description: service.description || '',
+      shortDesc: service.shortDesc || '',
+      price: service.price.toString(),
+      oldPrice: service.oldPrice ? service.oldPrice.toString() : '',
+      icon: service.icon || '',
+      image: service.image || '',
+      bgColor: service.bgColor,
+      order: service.order,
+      isActive: service.isActive,
+      features: service.features || []
+    });
+    setShowServiceForm(true);
+  };
+
+  const handleDeleteService = async (id) => {
+    if (!confirm('هل أنت متأكد من حذف هذه الخدمة؟')) return;
+    
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/services/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      
+      if (res.ok) {
+        setServices(services.filter(s => s.id !== id));
+        alert('تم حذف الخدمة بنجاح');
+      } else {
+        const data = await res.json();
+        alert(data.message || 'فشل في حذف الخدمة');
+      }
+    } catch (err) {
+      alert('فشل في حذف الخدمة: ' + err.message);
+    }
+  };
+
+  // Order handlers
+  const handleUpdateOrderStatus = async (orderId, newStatus) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/orders/${orderId}/status`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ status: newStatus })
+      });
+      
+      if (res.ok) {
+        loadDashboardData();
+        alert('تم تحديث حالة الطلب بنجاح');
+      } else {
+        const data = await res.json();
+        alert(data.message || 'فشل في تحديث حالة الطلب');
+      }
+    } catch (err) {
+      alert('فشل في تحديث حالة الطلب: ' + err.message);
+    }
+  };
+
+  const handleDeleteOrder = async (id) => {
+    if (!confirm('هل أنت متأكد من حذف هذا الطلب؟')) return;
+    
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/orders/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      
+      if (res.ok) {
+        setOrders(orders.filter(o => o.id !== id));
+        alert('تم حذف الطلب بنجاح');
+      } else {
+        const data = await res.json();
+        alert(data.message || 'فشل في حذف الطلب');
+      }
+    } catch (err) {
+      alert('فشل في حذف الطلب: ' + err.message);
+    }
+  };
+
+  const getOrderStatusColor = (status) => {
+    const colors = {
+      'PENDING': 'bg-orange-100 text-orange-700',
+      'CONFIRMED': 'bg-blue-100 text-blue-700',
+      'PROCESSING': 'bg-yellow-100 text-yellow-700',
+      'COMPLETED': 'bg-green-100 text-green-700',
+      'CANCELLED': 'bg-red-100 text-red-700'
+    };
+    return colors[status] || 'bg-gray-100 text-gray-700';
+  };
+
+  const getOrderStatusText = (status) => {
+    const texts = {
+      'PENDING': 'معلق',
+      'CONFIRMED': 'مؤكد',
+      'PROCESSING': 'قيد التنفيذ',
+      'COMPLETED': 'مكتمل',
+      'CANCELLED': 'ملغي'
+    };
+    return texts[status] || status;
+  };
+
   // Article handlers
   const handleSaveArticle = async () => {
     try {
       const url = editingArticle 
-        ? `http://localhost:5000/api/admin/articles/${editingArticle.id}`
-        : 'http://localhost:5000/api/admin/articles';
+        ? `${API_BASE_URL}/api/admin/articles/${editingArticle.id}`
+        : `${API_BASE_URL}/api/admin/articles`;
       
       const method = editingArticle ? 'PUT' : 'POST';
       
@@ -218,7 +485,7 @@ const AdminDashboard = () => {
         setShowArticleForm(false);
         setEditingArticle(null);
         // Reload articles
-        const articlesRes = await fetch('http://localhost:5000/api/admin/articles', {
+        const articlesRes = await fetch(`${API_BASE_URL}/api/admin/articles`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
         if (articlesRes.ok) {
@@ -254,7 +521,7 @@ const AdminDashboard = () => {
     if (!confirm('هل أنت متأكد من حذف هذا المقال؟ لا يمكن التراجع عن هذا الإجراء.')) return;
     
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/articles/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/articles/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
@@ -413,6 +680,33 @@ const AdminDashboard = () => {
           >
             <HeadphonesIcon className="w-4 h-4" />
             إدارة العملاء
+          </button>
+          <button
+            onClick={() => setActiveTab('tickers')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap flex items-center gap-2 ${
+              activeTab === 'tickers' ? 'bg-dark-1 text-white' : 'bg-white text-dark-2 hover:bg-gray-100'
+            }`}
+          >
+            <ScrollText className="w-4 h-4" />
+            التيكر ({tickers.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('services')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap flex items-center gap-2 ${
+              activeTab === 'services' ? 'bg-dark-1 text-white' : 'bg-white text-dark-2 hover:bg-gray-100'
+            }`}
+          >
+            <ShoppingBag className="w-4 h-4" />
+            الخدمات ({services.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('orders')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap flex items-center gap-2 ${
+              activeTab === 'orders' ? 'bg-dark-1 text-white' : 'bg-white text-dark-2 hover:bg-gray-100'
+            }`}
+          >
+            <ShoppingCart className="w-4 h-4" />
+            الطلبات ({orders.length})
           </button>
         </div>
 
@@ -958,6 +1252,596 @@ const AdminDashboard = () => {
             <p className="text-dark-2/60 text-center py-8">
               نظام إدارة العملاء والمتابعات قيد التطوير
             </p>
+          </div>
+        )}
+
+        {/* News Ticker Management View */}
+        {activeTab === 'tickers' && (
+          <div className="bg-white rounded-2xl p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-bold text-dark-1">إدارة التيكر الإخباري</h2>
+              <button
+                onClick={() => {
+                  setEditingTicker(null);
+                  setTickerForm({
+                    content: '',
+                    link: '',
+                    bgColor: '#22C55E',
+                    textColor: '#FFFFFF',
+                    order: 0,
+                    isActive: true,
+                    startDate: '',
+                    endDate: ''
+                  });
+                  setShowTickerForm(true);
+                }}
+                className="flex items-center gap-2 bg-dark-1 text-white px-4 py-2 rounded-lg hover:bg-dark-2 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                تيكر جديد
+              </button>
+            </div>
+
+            {showTickerForm && (
+              <div className="mb-6 p-6 bg-gray-50 rounded-xl">
+                <h3 className="font-bold text-dark-1 mb-4">
+                  {editingTicker ? 'تعديل التيكر' : 'تيكر جديد'}
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-dark-2 mb-1">المحتوى</label>
+                    <input
+                      type="text"
+                      value={tickerForm.content}
+                      onChange={(e) => setTickerForm({...tickerForm, content: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                      placeholder="نص التيكر الإخباري"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-dark-2 mb-1">الرابط (اختياري)</label>
+                    <input
+                      type="text"
+                      value={tickerForm.link}
+                      onChange={(e) => setTickerForm({...tickerForm, link: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                      placeholder="https://..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-dark-2 mb-1">الترتيب</label>
+                    <input
+                      type="number"
+                      value={tickerForm.order}
+                      onChange={(e) => setTickerForm({...tickerForm, order: parseInt(e.target.value) || 0})}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-dark-2 mb-1">لون الخلفية</label>
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="color"
+                        value={tickerForm.bgColor}
+                        onChange={(e) => setTickerForm({...tickerForm, bgColor: e.target.value})}
+                        className="w-12 h-8 rounded cursor-pointer"
+                      />
+                      <span className="text-xs text-gray-500">{tickerForm.bgColor}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-dark-2 mb-1">لون النص</label>
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="color"
+                        value={tickerForm.textColor}
+                        onChange={(e) => setTickerForm({...tickerForm, textColor: e.target.value})}
+                        className="w-12 h-8 rounded cursor-pointer"
+                      />
+                      <span className="text-xs text-gray-500">{tickerForm.textColor}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-dark-2 mb-1">تاريخ البداية</label>
+                    <input
+                      type="date"
+                      value={tickerForm.startDate}
+                      onChange={(e) => setTickerForm({...tickerForm, startDate: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-dark-2 mb-1">تاريخ الانتهاء</label>
+                    <input
+                      type="date"
+                      value={tickerForm.endDate}
+                      onChange={(e) => setTickerForm({...tickerForm, endDate: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center gap-4 mb-4">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={tickerForm.isActive}
+                      onChange={(e) => setTickerForm({...tickerForm, isActive: e.target.checked})}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-sm text-dark-2">نشط</span>
+                  </label>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleSaveTicker}
+                    className="bg-dark-1 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-dark-2"
+                  >
+                    {editingTicker ? 'حفظ التعديلات' : 'إضافة التيكر'}
+                  </button>
+                  <button
+                    onClick={() => setShowTickerForm(false)}
+                    className="bg-gray-200 text-dark-1 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-300"
+                  >
+                    إلغاء
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-100">
+                    <th className="text-right py-3 px-4 text-sm font-medium text-dark-2">المحتوى</th>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-dark-2">الترتيب</th>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-dark-2">الحالة</th>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-dark-2">الألوان</th>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-dark-2">الإجراءات</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tickers.map((ticker) => (
+                    <tr key={ticker.id} className="border-b border-gray-50">
+                      <td className="py-3 px-4">
+                        <div>
+                          <p className="font-medium text-dark-1">{ticker.content}</p>
+                          {ticker.link && (
+                            <p className="text-xs text-primary">{ticker.link}</p>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-sm text-dark-2">{ticker.order}</td>
+                      <td className="py-3 px-4">
+                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                          ticker.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+                        }`}>
+                          {ticker.isActive ? 'نشط' : 'غير نشط'}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex gap-2">
+                          <span
+                            className="w-6 h-6 rounded-full border"
+                            style={{ backgroundColor: ticker.bgColor }}
+                            title={`خلفية: ${ticker.bgColor}`}
+                          />
+                          <span
+                            className="w-6 h-6 rounded-full border"
+                            style={{ backgroundColor: ticker.textColor }}
+                            title={`نص: ${ticker.textColor}`}
+                          />
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleEditTicker(ticker)}
+                            className="p-2 text-orange-500 hover:bg-orange-50 rounded-lg"
+                            title="تعديل"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteTicker(ticker.id)}
+                            className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
+                            title="حذف"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {tickers.length === 0 && (
+                <p className="text-center text-gray-400 py-8">لا توجد تيكرات</p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Services Management View */}
+        {activeTab === 'services' && (
+          <div className="bg-white rounded-2xl p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-bold text-dark-1">إدارة الخدمات والأسعار</h2>
+              <button
+                onClick={() => {
+                  setEditingService(null);
+                  setServiceForm({
+                    name: '',
+                    slug: '',
+                    description: '',
+                    shortDesc: '',
+                    price: '',
+                    oldPrice: '',
+                    icon: '',
+                    image: '',
+                    bgColor: '#FFFFFF',
+                    order: 0,
+                    isActive: true,
+                    features: []
+                  });
+                  setShowServiceForm(true);
+                }}
+                className="flex items-center gap-2 bg-dark-1 text-white px-4 py-2 rounded-lg hover:bg-dark-2 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                خدمة جديدة
+              </button>
+            </div>
+
+            {showServiceForm && (
+              <div className="mb-6 p-6 bg-gray-50 rounded-xl">
+                <h3 className="font-bold text-dark-1 mb-4">
+                  {editingService ? 'تعديل الخدمة' : 'خدمة جديدة'}
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-sm font-medium text-dark-2 mb-1">الاسم</label>
+                    <input
+                      type="text"
+                      value={serviceForm.name}
+                      onChange={(e) => setServiceForm({...serviceForm, name: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                      placeholder="اسم الخدمة"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-dark-2 mb-1">الرابط (Slug)</label>
+                    <input
+                      type="text"
+                      value={serviceForm.slug}
+                      onChange={(e) => setServiceForm({...serviceForm, slug: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                      placeholder="service-name"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-dark-2 mb-1">السعر (ريال)</label>
+                    <input
+                      type="number"
+                      value={serviceForm.price}
+                      onChange={(e) => setServiceForm({...serviceForm, price: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                      placeholder="1000"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-dark-2 mb-1">السعر القديم (اختياري)</label>
+                    <input
+                      type="number"
+                      value={serviceForm.oldPrice}
+                      onChange={(e) => setServiceForm({...serviceForm, oldPrice: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                      placeholder="1500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-dark-2 mb-1">الأيقونة</label>
+                    <input
+                      type="text"
+                      value={serviceForm.icon}
+                      onChange={(e) => setServiceForm({...serviceForm, icon: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                      placeholder="اسم الأيقونة من Lucide"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-dark-2 mb-1">الصورة</label>
+                    <input
+                      type="text"
+                      value={serviceForm.image}
+                      onChange={(e) => setServiceForm({...serviceForm, image: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                      placeholder="رابط الصورة"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-dark-2 mb-1">الترتيب</label>
+                    <input
+                      type="number"
+                      value={serviceForm.order}
+                      onChange={(e) => setServiceForm({...serviceForm, order: parseInt(e.target.value) || 0})}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-dark-2 mb-1">لون الخلفية</label>
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="color"
+                        value={serviceForm.bgColor}
+                        onChange={(e) => setServiceForm({...serviceForm, bgColor: e.target.value})}
+                        className="w-12 h-8 rounded cursor-pointer"
+                      />
+                    </div>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-dark-2 mb-1">الوصف القصير</label>
+                    <input
+                      type="text"
+                      value={serviceForm.shortDesc}
+                      onChange={(e) => setServiceForm({...serviceForm, shortDesc: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                      placeholder="وصف مختصر يظهر في البطاقة"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-dark-2 mb-1">الوصف الكامل</label>
+                    <textarea
+                      value={serviceForm.description || ''}
+                      onChange={(e) => setServiceForm({...serviceForm, description: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm h-24"
+                      placeholder="وصف تفصيلي للخدمة"
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center gap-4 mb-4">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={serviceForm.isActive}
+                      onChange={(e) => setServiceForm({...serviceForm, isActive: e.target.checked})}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-sm text-dark-2">نشط</span>
+                  </label>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleSaveService}
+                    className="bg-dark-1 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-dark-2"
+                  >
+                    {editingService ? 'حفظ التعديلات' : 'إضافة الخدمة'}
+                  </button>
+                  <button
+                    onClick={() => setShowServiceForm(false)}
+                    className="bg-gray-200 text-dark-1 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-300"
+                  >
+                    إلغاء
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-100">
+                    <th className="text-right py-3 px-4 text-sm font-medium text-dark-2">الخدمة</th>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-dark-2">السعر</th>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-dark-2">الترتيب</th>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-dark-2">الحالة</th>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-dark-2">الإجراءات</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {services.map((service) => (
+                    <tr key={service.id} className="border-b border-gray-50">
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-3">
+                          {service.image && (
+                            <img src={service.image} alt="" className="w-10 h-10 object-cover rounded" />
+                          )}
+                          <div>
+                            <p className="font-medium text-dark-1">{service.name}</p>
+                            <p className="text-xs text-gray-500">{service.slug}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-sm text-dark-2">
+                        <div>
+                          <span className="font-medium">{service.price} ر.س</span>
+                          {service.oldPrice && (
+                            <span className="text-xs text-gray-400 line-through block">{service.oldPrice} ر.س</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-sm text-dark-2">{service.order}</td>
+                      <td className="py-3 px-4">
+                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                          service.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+                        }`}>
+                          {service.isActive ? 'نشط' : 'غير نشط'}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleEditService(service)}
+                            className="p-2 text-orange-500 hover:bg-orange-50 rounded-lg"
+                            title="تعديل"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteService(service.id)}
+                            className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
+                            title="حذف"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {services.length === 0 && (
+                <p className="text-center text-gray-400 py-8">لا توجد خدمات</p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Orders Management View */}
+        {activeTab === 'orders' && (
+          <div className="bg-white rounded-2xl p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-bold text-dark-1">إدارة الطلبات</h2>
+              <select
+                value={orderFilter}
+                onChange={(e) => setOrderFilter(e.target.value)}
+                className="px-3 py-2 border border-gray-200 rounded-lg text-sm"
+              >
+                <option value="">كل الحالات</option>
+                <option value="PENDING">معلقة</option>
+                <option value="CONFIRMED">مؤكدة</option>
+                <option value="PROCESSING">قيد التنفيذ</option>
+                <option value="COMPLETED">مكتملة</option>
+                <option value="CANCELLED">ملغية</option>
+              </select>
+            </div>
+
+            {showOrderDetail && selectedOrder && (
+              <div className="mb-6 p-6 bg-gray-50 rounded-xl">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold text-dark-1">تفاصيل الطلب</h3>
+                  <button
+                    onClick={() => setShowOrderDetail(false)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <XCircle className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <p className="text-sm text-gray-500">العميل</p>
+                    <p className="font-medium">{selectedOrder.customerName}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">البريد الإلكتروني</p>
+                    <p className="font-medium">{selectedOrder.customerEmail}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">الهاتف</p>
+                    <p className="font-medium">{selectedOrder.customerPhone}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">الشركة</p>
+                    <p className="font-medium">{selectedOrder.customerCompany || '-'}</p>
+                  </div>
+                </div>
+                <div className="mb-4">
+                  <p className="text-sm text-gray-500 mb-2">الخدمات المطلوبة</p>
+                  <div className="space-y-2">
+                    {selectedOrder.items?.map((item) => (
+                      <div key={item.id} className="flex justify-between items-center p-3 bg-white rounded-lg">
+                        <span className="font-medium">{item.service?.name}</span>
+                        <div className="text-left">
+                          <span className="text-sm">{item.quantity} × {item.price} ر.س</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex justify-between items-center pt-4 border-t">
+                  <p className="text-lg font-bold">الإجمالي: {selectedOrder.totalAmount} ر.س</p>
+                  <div className="flex gap-2">
+                    <select
+                      value={selectedOrder.status}
+                      onChange={(e) => handleUpdateOrderStatus(selectedOrder.id, e.target.value)}
+                      className="px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                    >
+                      <option value="PENDING">معلق</option>
+                      <option value="CONFIRMED">مؤكد</option>
+                      <option value="PROCESSING">قيد التنفيذ</option>
+                      <option value="COMPLETED">مكتمل</option>
+                      <option value="CANCELLED">ملغي</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-100">
+                    <th className="text-right py-3 px-4 text-sm font-medium text-dark-2">رقم الطلب</th>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-dark-2">العميل</th>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-dark-2">الخدمات</th>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-dark-2">المبلغ</th>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-dark-2">الحالة</th>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-dark-2">التاريخ</th>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-dark-2">الإجراءات</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders
+                    .filter(order => !orderFilter || order.status === orderFilter)
+                    .map((order) => (
+                    <tr key={order.id} className="border-b border-gray-50">
+                      <td className="py-3 px-4 font-medium text-dark-1">#{order.id.slice(-6)}</td>
+                      <td className="py-3 px-4">
+                        <div>
+                          <p className="font-medium text-sm">{order.customerName}</p>
+                          <p className="text-xs text-gray-500">{order.customerEmail}</p>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-sm text-dark-2">
+                        {order.items?.length} خدمة
+                      </td>
+                      <td className="py-3 px-4 text-sm font-medium">{order.totalAmount} ر.س</td>
+                      <td className="py-3 px-4">
+                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${getOrderStatusColor(order.status)}`}>
+                          {getOrderStatusText(order.status)}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-500">
+                        {new Date(order.createdAt).toLocaleDateString('ar-SA')}
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => {
+                              setSelectedOrder(order);
+                              setShowOrderDetail(true);
+                            }}
+                            className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg"
+                            title="عرض التفاصيل"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteOrder(order.id)}
+                            className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
+                            title="حذف"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {orders.length === 0 && (
+                <p className="text-center text-gray-400 py-8">لا توجد طلبات</p>
+              )}
+            </div>
           </div>
         )}
       </div>

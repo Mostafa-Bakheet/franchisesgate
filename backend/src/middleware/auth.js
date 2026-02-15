@@ -44,6 +44,16 @@ const authorize = (...roles) => {
 };
 
 /**
+ * Admin-only shorthand
+ */
+const requireAdmin = (req, res, next) => {
+  if (req.userRole !== 'ADMIN') {
+    throw new AppError('Access denied. Admin only.', 403, 'FORBIDDEN');
+  }
+  next();
+};
+
+/**
  * Optional authentication - doesn't throw if no token
  */
 const optionalAuth = asyncHandler(async (req, res, next) => {
@@ -68,4 +78,4 @@ const optionalAuth = asyncHandler(async (req, res, next) => {
   next();
 });
 
-export { authenticate, authorize, optionalAuth };
+export { authenticate, authorize, requireAdmin, optionalAuth };

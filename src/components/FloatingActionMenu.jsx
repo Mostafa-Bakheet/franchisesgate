@@ -255,13 +255,13 @@ const FloatingActionMenu = ({
         })}
       </div>
 
-      {/* Main FAB Button - Fixed click area with pointer-events-auto */}
+       {/* Main FAB Button - Hidden temporarily */}
       <button
         onClick={(e) => {
           e.stopPropagation();
           setIsOpen(!isOpen);
         }}
-        className={`w-16 h-16 rounded-2xl shadow-2xl flex items-center justify-center text-white transition-all duration-300 hover:scale-105 pointer-events-auto ${
+        className={`hidden w-16 h-16 rounded-2xl shadow-2xl flex items-center justify-center text-white transition-all duration-300 hover:scale-105 pointer-events-auto ${
           isOpen 
             ? 'bg-dark-1 rotate-45' 
             : 'bg-gradient-to-r from-primary to-primary/80'

@@ -13,6 +13,7 @@ import UserJourneyTracker from '../components/UserJourneyTracker';
 import AIChatbot from '../components/AIChatbot';
 import InvestmentMap from '../components/InvestmentMap';
 import FranchiseOwnerChat from '../components/FranchiseOwnerChat';
+import { API_BASE_URL, getImageUrl } from '../config.js';
 
 const GalleryPage = () => {
   const [franchises, setFranchises] = useState([]);
@@ -44,7 +45,7 @@ const GalleryPage = () => {
       if (filters.country) queryParams.append('country', filters.country);
       if (filters.sortBy) queryParams.append('sortBy', filters.sortBy);
       
-      const response = await fetch(`http://localhost:5000/api/gallery?${queryParams}`);
+      const response = await fetch(`${API_BASE_URL}/api/gallery?${queryParams}`);
       const data = await response.json();
       
       if (!response.ok) throw new Error(data.message || 'Failed to load franchises');
@@ -59,7 +60,7 @@ const GalleryPage = () => {
 
   const fetchFilterOptions = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/gallery/filters');
+      const response = await fetch(`${API_BASE_URL}/api/gallery/filters`);
       const data = await response.json();
       
       if (response.ok) {
@@ -202,7 +203,7 @@ const GalleryPage = () => {
                       <div className="bg-white rounded-[20px] p-6 mb-4 flex items-center justify-center h-32 overflow-hidden">
                         {franchise.logo ? (
                           <img
-                            src={franchise.logo}
+                            src={getImageUrl(franchise.logo)}
                             alt={`شعار ${franchise.name}`}
                             className="max-h-24 max-w-full object-contain"
                             loading="lazy"
@@ -217,7 +218,7 @@ const GalleryPage = () => {
                                   return;
                                 }
                               }
-                              e.target.src = '/placeholder-logo.png';
+                              e.target.src = 'placeholder-logo.png';
                             }}
                           />
                         ) : (
@@ -254,7 +255,7 @@ const GalleryPage = () => {
                         </Link>
                         <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center">
                           <img 
-                            src="/icons8-saudi-arabia-48.png" 
+                            src="icons8-saudi-arabia-48.png" 
                             alt="" 
                             className="w-10"
                           />

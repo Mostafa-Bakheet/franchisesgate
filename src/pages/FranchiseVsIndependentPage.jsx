@@ -267,19 +267,19 @@ const ComparisonPage = () => {
             <p className="text-dark-2 mb-4">شارك المقال:</p>
             <div className="flex gap-3">
               <button 
-                onClick={() => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent('مقارنة رائعة بين الفرنشايز والمشروع المستقل')}&url=${encodeURIComponent('https://franchisesgate.com/blog/franchise-vs-independent')}`, '_blank')}
+                onClick={() => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent('مقارنة رائعة بين الفرنشايز والمشروع المستقل')}&url=${encodeURIComponent('https://franchisegate.sa/blog/franchise-vs-independent')}`, '_blank')}
                 className="bg-[#1DA1F2] text-white px-4 py-2 rounded-lg hover:opacity-90"
               >
                 تويتر
               </button>
               <button 
-                onClick={() => window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent('https://franchisesgate.com/blog/franchise-vs-independent')}`, '_blank')}
+                onClick={() => window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent('https://franchisegate.sa/blog/franchise-vs-independent')}`, '_blank')}
                 className="bg-[#0A66C2] text-white px-4 py-2 rounded-lg hover:opacity-90"
               >
                 لينكدإن
               </button>
               <button 
-                onClick={() => window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent('مقارنة رائعة: https://franchisesgate.com/blog/franchise-vs-independent')}`, '_blank')}
+                onClick={() => window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent('مقارنة رائعة: https://franchisegate.sa/blog/franchise-vs-independent')}`, '_blank')}
                 className="bg-[#25D366] text-white px-4 py-2 rounded-lg hover:opacity-90"
               >
                 واتساب

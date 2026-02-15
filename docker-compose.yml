@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: franchisegate-api
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=7d
+      - CORS_ORIGIN=https://franchisegate.sa,https://www.franchisegate.sa
+      - RATE_LIMIT_WINDOW_MS=900000
+      - RATE_LIMIT_MAX_REQUESTS=100
+      - UPLOAD_MAX_SIZE=5242880
+      - UPLOAD_DIR=uploads
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+    networks:
+      - franchisegate-network
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16-alpine
+    container_name: franchisegate-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - franchisegate-network
+    ports:
+      - "127.0.0.1:5432:5432"
+
+  nginx:
+    image: nginx:alpine
+    container_name: franchisegate-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./frontend/dist:/usr/share/nginx/html:ro
+      - ./uploads:/usr/share/nginx/html/uploads:ro
+    networks:
+      - franchisegate-network
+    depends_on:
+      - app
+
+volumes:
+  postgres_data:
+
+networks:
+  franchisegate-network:
+    driver: bridge

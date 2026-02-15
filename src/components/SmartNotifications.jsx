@@ -13,6 +13,7 @@ import {
   Trash2,
   Check
 } from 'lucide-react';
+import { API_BASE_URL } from '../config.js';
 
 const SmartNotifications = () => {
   const [notifications, setNotifications] = useState([]);
@@ -33,12 +34,12 @@ const SmartNotifications = () => {
   const fetchNotifications = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/admin/notifications', {
+      const response = await fetch(`${API_BASE_URL}/api/notifications`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      if (res.ok) {
-        const data = await res.json();
+      if (response.ok) {
+        const data = await response.json();
         setNotifications(data.data || []);
         setUnreadCount(data.data?.filter(n => !n.read).length || 0);
       }
@@ -51,12 +52,12 @@ const SmartNotifications = () => {
   const markAsRead = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/admin/notifications/${id}/read`, {
+      const response = await fetch(`${API_BASE_URL}/api/notifications/${id}/read`, {
         method: 'PATCH',
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      if (res.ok) {
+      if (response.ok) {
         setNotifications(prev => prev.map(n => 
           n.id === id ? { ...n, read: true } : n
         ));
@@ -71,12 +72,12 @@ const SmartNotifications = () => {
   const markAllAsRead = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/admin/notifications/read-all', {
+      const response = await fetch(`${API_BASE_URL}/api/notifications/mark-all-read`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      if (res.ok) {
+      if (response.ok) {
         setNotifications(prev => prev.map(n => ({ ...n, read: true })));
         setUnreadCount(0);
       }
@@ -89,12 +90,12 @@ const SmartNotifications = () => {
   const deleteNotification = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/admin/notifications/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/notifications/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      if (res.ok) {
+      if (response.ok) {
         setNotifications(prev => prev.filter(n => n.id !== id));
       }
     } catch (err) {
@@ -108,7 +109,7 @@ const SmartNotifications = () => {
       const token = localStorage.getItem('token');
       const newSettings = { ...settings, [key]: value };
       
-      const res = await fetch('http://localhost:5000/api/admin/notification-settings', {
+      const res = await fetch(`${API_BASE_URL}/api/admin/notification-settings`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',

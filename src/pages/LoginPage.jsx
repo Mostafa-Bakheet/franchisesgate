@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import SEO from '../components/SEO';
 import Navigation from '../components/Navigation';
+import { API_BASE_URL } from '../config.js';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ const LoginPage = () => {
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -139,17 +140,7 @@ const LoginPage = () => {
               </Link>
             </div>
 
-            <div className="mt-8 pt-6 border-t border-gray-100">
-              <p className="text-xs text-dark-2/40 text-center mb-3">حسابات تجريبية:</p>
-              <div className="space-y-2 text-xs text-dark-2/60">
-                <div className="bg-gray-50 p-2 rounded-lg text-center">
-                  <span className="font-medium">مدير:</span> admin@franchisegate.com / AdminPass123!
-                </div>
-                <div className="bg-gray-50 p-2 rounded-lg text-center">
-                  <span className="font-medium">مالك:</span> owner1@example.com / OwnerPass123!
-                </div>
-              </div>
-            </div>
+            
           </div>
         </div>
       </div>

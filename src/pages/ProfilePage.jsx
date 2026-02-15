@@ -4,6 +4,8 @@ import { Star, MapPin, Users, Calendar, Clock, CheckCircle, Building, ArrowLeft,
 import SEO from '../components/SEO';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
+import BranchesMap from '../components/BranchesMap';
+import { API_BASE_URL, getImageUrl } from '../config.js';
 
 const ProfilePage = () => {
   const { id } = useParams();
@@ -43,7 +45,7 @@ const ProfilePage = () => {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`http://localhost:5000/api/gallery/${id}`);
+      const response = await fetch(`${API_BASE_URL}/api/gallery/${id}`);
       const data = await response.json();
 
       if (!response.ok) {
@@ -64,7 +66,7 @@ const ProfilePage = () => {
     setSubmitSuccess(false);
 
     try {
-      const response = await fetch('http://localhost:5000/api/messages', {
+      const response = await fetch(`${API_BASE_URL}/api/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -153,7 +155,7 @@ const staticIcons = [
                 <div className="flex flex-col items-center gap-4">
                   <div className="bg-white rounded-[28px] p-8 shadow-md">
                     <img 
-                      src={franchise.logo || '/placeholder-logo.png'} 
+                      src={getImageUrl(franchise.logo) || 'placeholder-logo.png'} 
                       alt={franchise.name}
                       className="w-36 h-36 object-contain"
                     />
@@ -249,7 +251,7 @@ const staticIcons = [
         >
           <div className="w-16 h-16 bg-[#f5f5f5] rounded-lg flex items-center justify-center flex-shrink-0">
             <img
-              src={staticIcons[index] || "/icons/Frame-1.png"}
+              src={staticIcons[index] || "icons/Frame-1.png"}
               alt=""
               className="w-10 h-10 object-contain"
             />
@@ -272,7 +274,10 @@ const staticIcons = [
           </div>
         </div>
       </section>
-
+    {/* Branches Map Section */}
+      {franchise && (
+        <BranchesMap franchiseName={franchise.name} />
+      )}
       {/* Gallery Section */}
       {gallery.length > 0 && (
         <section className="py-8 bg-white">
@@ -289,12 +294,14 @@ const staticIcons = [
         </section>
       )}
 
+  
+
       {/* Contact Form Section */}
       <section className="py-16 bg-[#F7F7F7]">
         <div className="max-w-6xl mx-auto px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
             <div className="hidden lg:block">
-              <img src="/Frame 427320664.png" alt="" className="w-full h-full object-cover rounded-[24px]" />
+              <img src="/Whisk_554fe5053c4db958c9342f7bd58c8864dr 1 (1).png" alt="" className="w-full h-full object-cover rounded-[24px]" />
             </div>
 
             <div className="bg-white rounded-[24px] p-8">

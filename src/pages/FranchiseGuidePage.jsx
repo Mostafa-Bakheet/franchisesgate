@@ -47,7 +47,7 @@ const FranchiseGuidePage = () => {
           {/* Featured Image */}
           <div className="rounded-2xl overflow-hidden mb-8">
             <img 
-              src="/blog/franchise-guide-hero.jpg" 
+              src="blog/franchise-guide-hero.jpg" 
               alt="دليل الاستثمار في الامتيازات التجارية - استثمار ناجح في السعودية"
               className="w-full h-64 md:h-96 object-cover"
               onError={(e) => e.target.style.display = 'none'}
@@ -220,19 +220,19 @@ const FranchiseGuidePage = () => {
             <p className="text-dark-2 mb-4">شارك المقال:</p>
             <div className="flex gap-3">
               <button 
-                onClick={() => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent('دليل ممتاز للاستثمار في الفرنشايز في السعودية')}&url=${encodeURIComponent('https://franchisesgate.com/blog/franchise-investment-guide')}`, '_blank')}
+                onClick={() => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent('دليل ممتاز للاستثمار في الفرنشايز في السعودية')}&url=${encodeURIComponent('https://franchisegate.sa/blog/franchise-investment-guide')}`, '_blank')}
                 className="bg-[#1DA1F2] text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"
               >
                 تويتر
               </button>
               <button 
-                onClick={() => window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent('https://franchisesgate.com/blog/franchise-investment-guide')}`, '_blank')}
+                onClick={() => window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent('https://franchisegate.sa/blog/franchise-investment-guide')}`, '_blank')}
                 className="bg-[#0A66C2] text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"
               >
                 لينكدإن
               </button>
               <button 
-                onClick={() => window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent('دليل ممتاز للاستثمار في الفرنشايز: https://franchisesgate.com/blog/franchise-investment-guide')}`, '_blank')}
+                onClick={() => window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent('دليل ممتاز للاستثمار في الفرنشايز: https://franchisegate.sa/blog/franchise-investment-guide')}`, '_blank')}
                 className="bg-[#25D366] text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"
               >
                 واتساب

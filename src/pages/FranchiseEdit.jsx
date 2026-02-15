@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Loader2, Save, Plus, Trash2, Building2, Image as ImageIcon, Upload, Star } from 'lucide-react';
+import { API_BASE_URL } from '../config.js';
 
 const FranchiseEdit = () => {
   const navigate = useNavigate();
@@ -57,7 +58,7 @@ const FranchiseEdit = () => {
   const loadFranchiseData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/franchises/my-franchise', {
+      const response = await fetch(`${API_BASE_URL}/api/franchises/my-franchise`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -109,7 +110,7 @@ const FranchiseEdit = () => {
     try {
       const token = localStorage.getItem('token');
       const method = hasFranchise ? 'PATCH' : 'POST';
-      const url = 'http://localhost:5000/api/franchises' + (hasFranchise ? '/my-franchise' : '');
+      const url = `${API_BASE_URL}/api/franchises` + (hasFranchise ? '/my-franchise' : '');
       
       const response = await fetch(url, {
         method: method,
@@ -152,7 +153,7 @@ const FranchiseEdit = () => {
         franchiseFee: investmentData.franchiseFee ? parseFloat(investmentData.franchiseFee) : 0
       };
       
-      const response = await fetch('http://localhost:5000/api/franchises/my-franchise/investment', {
+      const response = await fetch(`${API_BASE_URL}/api/franchises/my-franchise/investment`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -197,7 +198,7 @@ const FranchiseEdit = () => {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/franchises/my-franchise/stats', {
+      const response = await fetch(`${API_BASE_URL}/api/franchises/my-franchise/stats`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -243,7 +244,7 @@ const FranchiseEdit = () => {
     setSaving(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/franchises/my-franchise/characteristics', {
+      const response = await fetch(`${API_BASE_URL}/api/franchises/my-franchise/characteristics`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -273,7 +274,7 @@ const FranchiseEdit = () => {
       const formData = new FormData();
       formData.append('image', file);
 
-      const response = await fetch('http://localhost:5000/api/upload/logo', {
+      const response = await fetch(`${API_BASE_URL}/api/upload/logo`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: formData

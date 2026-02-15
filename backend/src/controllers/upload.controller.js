@@ -82,7 +82,17 @@ export const uploadMultiple = upload.array('images', 10);
 
 // Get base URL for local files
 const getBaseUrl = () => {
+  // For production (Hostinger VPS)
+  if (process.env.NODE_ENV === 'production') {
+    return process.env.BACKEND_URL || 'https://lightgrey-antelope-357802.hostingersite.com:5000';
+  }
+  // For local development
   return process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 5000}`;
+};
+
+// Get relative path for database storage (more flexible)
+const getRelativePath = (filename) => {
+  return `/uploads/franchises/${filename}`;
 };
 
 /**
@@ -152,7 +162,7 @@ export const uploadSingleImage = asyncHandler(async (req, res) => {
   // Convert to WebP if not using Cloudinary (Cloudinary handles conversion automatically)
   if (!isCloudinaryConfigured) {
     const converted = await convertToWebP(req.file.path, { quality: 85 });
-    fileUrl = `${getBaseUrl()}/uploads/franchises/${converted.filename}`;
+    fileUrl = getRelativePath(converted.filename);
     filename = converted.filename;
   }
 
@@ -181,7 +191,7 @@ export const uploadMultipleImages = asyncHandler(async (req, res) => {
     // Convert to WebP if not using Cloudinary
     if (!isCloudinaryConfigured) {
       const converted = await convertToWebP(file.path, { quality: 85 });
-      fileUrl = `${getBaseUrl()}/uploads/franchises/${converted.filename}`;
+      fileUrl = getRelativePath(converted.filename);
       filename = converted.filename;
     }
 
@@ -237,7 +247,7 @@ export const uploadLogo = asyncHandler(async (req, res) => {
   // Convert to WebP if not using Cloudinary
   if (!isCloudinaryConfigured) {
     const converted = await convertToWebP(req.file.path, { quality: 85, width: 500 });
-    fileUrl = `${getBaseUrl()}/uploads/franchises/${converted.filename}`;
+    fileUrl = getRelativePath(converted.filename);
     filename = converted.filename;
   }
 
@@ -264,7 +274,7 @@ export const uploadCover = asyncHandler(async (req, res) => {
   // Convert to WebP if not using Cloudinary
   if (!isCloudinaryConfigured) {
     const converted = await convertToWebP(req.file.path, { quality: 85, width: 1200 });
-    fileUrl = `${getBaseUrl()}/uploads/franchises/${converted.filename}`;
+    fileUrl = getRelativePath(converted.filename);
     filename = converted.filename;
   }
 
@@ -292,7 +302,7 @@ export const uploadGallery = asyncHandler(async (req, res) => {
     // Convert to WebP if not using Cloudinary
     if (!isCloudinaryConfigured) {
       const converted = await convertToWebP(file.path, { quality: 85, width: 800 });
-      fileUrl = `${getBaseUrl()}/uploads/franchises/${converted.filename}`;
+      fileUrl = getRelativePath(converted.filename);
       filename = converted.filename;
     }
 

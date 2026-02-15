@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Loader2, Upload, Trash2, Image as ImageIcon, Plus } from 'lucide-react';
+import { API_BASE_URL } from '../config.js';
 
 const OwnerGallery = () => {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ const OwnerGallery = () => {
   const loadFranchise = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/franchises/my-franchise', {
+      const response = await fetch(`${API_BASE_URL}/api/franchises/my-franchise`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -48,7 +49,7 @@ const OwnerGallery = () => {
       const formData = new FormData();
       formData.append('images', file);
 
-      const response = await fetch('http://localhost:5000/api/upload/gallery', {
+      const response = await fetch(`${API_BASE_URL}/api/upload/gallery`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: formData
@@ -59,7 +60,7 @@ const OwnerGallery = () => {
         const uploadedImages = data.data?.images || [];
         
         if (uploadedImages.length > 0) {
-          const galleryRes = await fetch('http://localhost:5000/api/franchises/my-franchise/gallery', {
+          const galleryRes = await fetch(`${API_BASE_URL}/api/franchises/my-franchise/gallery`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -96,7 +97,7 @@ const OwnerGallery = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/franchises/my-franchise/gallery/${imageId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/franchises/my-franchise/gallery/${imageId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });

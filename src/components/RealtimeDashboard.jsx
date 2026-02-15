@@ -17,6 +17,7 @@ import {
   Share2,
   Mail
 } from 'lucide-react';
+import { API_BASE_URL } from '../config.js';
 
 // Map icon names to actual components
 const iconMap = {
@@ -41,8 +42,6 @@ const RealtimeDashboard = () => {
   const [topFranchises, setTopFranchises] = useState([]);
   const [trafficSources, setTrafficSources] = useState([]);
   const [hourlyData, setHourlyData] = useState([]);
-
-  const API_BASE_URL = 'http://localhost:5000/api/admin';
 
   const fetchDashboardData = async () => {
     try {

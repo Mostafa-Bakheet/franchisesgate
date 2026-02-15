@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Loader2, Mail, MailOpen, Archive, RefreshCw, MessageSquare } from 'lucide-react';
+import { API_BASE_URL } from '../config.js';
 
 const MessageInbox = () => {
   const navigate = useNavigate();
@@ -25,7 +26,7 @@ const MessageInbox = () => {
       setError(null);
       
       const token = localStorage.getItem('token');
-      let url = 'http://localhost:5000/api/messages/my-messages';
+      let url = `${API_BASE_URL}/api/messages/my-messages`;
       if (filter !== 'ALL') {
         url += `?status=${filter}`;
       }
@@ -55,7 +56,7 @@ const MessageInbox = () => {
   const markAsRead = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/messages/my-messages/${id}/status`, {
+      const response = await fetch(`${API_BASE_URL}/api/messages/my-messages/${id}/status`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -77,7 +78,7 @@ const MessageInbox = () => {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/messages/my-messages/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/messages/my-messages/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });

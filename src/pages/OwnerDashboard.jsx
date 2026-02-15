@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Building2, MessageSquare, Eye, LogOut, Edit, Send, Image, Loader2, ChevronRight, Home, LayoutDashboard, Users, BarChart3, Phone, Calendar, CheckCircle, AlertCircle, TrendingUp, RefreshCw, Search, Filter, X } from 'lucide-react';
 import ChatCenter from '../components/ChatCenter';
+import { API_BASE_URL } from '../config.js';
 
 const OwnerDashboard = () => {
   const navigate = useNavigate();
@@ -43,7 +44,7 @@ const OwnerDashboard = () => {
       setLoading(true);
       
       const token = localStorage.getItem('token');
-      const userRes = await fetch('http://localhost:5000/api/auth/me', {
+      const userRes = await fetch(`${API_BASE_URL}/api/auth/me`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -60,7 +61,7 @@ const OwnerDashboard = () => {
       setUser(userData.data.user);
       setFranchise(userData.data.user.franchise);
 
-      const messagesRes = await fetch('http://localhost:5000/api/messages/my-messages?limit=5', {
+      const messagesRes = await fetch(`${API_BASE_URL}/api/messages/my-messages?limit=5`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -69,7 +70,7 @@ const OwnerDashboard = () => {
         setMessages(messagesData.data || []);
       }
 
-      const statsRes = await fetch('http://localhost:5000/api/messages/my-messages/stats', {
+      const statsRes = await fetch(`${API_BASE_URL}/api/messages/my-messages/stats`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -86,7 +87,7 @@ const OwnerDashboard = () => {
 
   const handleSubmitForApproval = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/franchises/submit', {
+      const res = await fetch(`${API_BASE_URL}/api/franchises/submit`, {
         method: 'POST',
         headers: getAuthHeaders()
       });
@@ -115,10 +116,10 @@ const OwnerDashboard = () => {
       const token = localStorage.getItem('token');
       
       const [statsRes, convRes] = await Promise.all([
-        fetch('http://localhost:5000/api/chat/stats', {
+        fetch(`${API_BASE_URL}/api/chat/stats`, {
           headers: { Authorization: `Bearer ${token}` }
         }),
-        fetch('http://localhost:5000/api/chat/my-conversations', {
+        fetch(`${API_BASE_URL}/api/chat/my-conversations`, {
           headers: { Authorization: `Bearer ${token}` }
         })
       ]);
@@ -140,7 +141,7 @@ const OwnerDashboard = () => {
   const handleSendMessage = async (conversationId, content) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/chat/conversations/${conversationId}/messages`, {
+      const response = await fetch(`${API_BASE_URL}/api/chat/conversations/${conversationId}/messages`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -149,8 +150,8 @@ const OwnerDashboard = () => {
         body: JSON.stringify({ content })
       });
 
-      if (res.ok) {
-        const convRes = await fetch(`http://localhost:5000/api/chat/conversations/${conversationId}`, {
+      if (response.ok) {
+        const convRes = await fetch(`${API_BASE_URL}/api/chat/conversations/${conversationId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (convRes.ok) {
@@ -169,7 +170,7 @@ const OwnerDashboard = () => {
     
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/chat/conversations/${conversationId}/close`, {
+      const res = await fetch(`${API_BASE_URL}/api/chat/conversations/${conversationId}/close`, {
         method: 'PATCH',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -186,7 +187,7 @@ const OwnerDashboard = () => {
   const handleAddNote = async (conversationId, content) => {
     try {
       const token = localStorage.getItem('token');
-      await fetch(`http://localhost:5000/api/chat/conversations/${conversationId}/notes`, {
+      await fetch(`${API_BASE_URL}/api/chat/conversations/${conversationId}/notes`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -195,7 +196,7 @@ const OwnerDashboard = () => {
         body: JSON.stringify({ content, noteType: 'internal' })
       });
 
-      const convRes = await fetch(`http://localhost:5000/api/chat/conversations/${conversationId}`, {
+      const convRes = await fetch(`${API_BASE_URL}/api/chat/conversations/${conversationId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (convRes.ok) {
@@ -211,7 +212,7 @@ const OwnerDashboard = () => {
   const loadLeads = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/crm/leads', {
+      const res = await fetch(`${API_BASE_URL}/api/crm/leads`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {

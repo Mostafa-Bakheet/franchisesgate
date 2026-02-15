@@ -40,7 +40,7 @@ const SEO = ({
       document.head.appendChild(linkCanonical);
     }
     if (canonical) {
-      linkCanonical.setAttribute('href', `https://franchisesgate.com${canonical}`);
+      linkCanonical.setAttribute('href', `https://franchisegate.sa${canonical}`);
     }
     
     // Update robots
@@ -57,7 +57,7 @@ const SEO = ({
     updateMetaProperty('og:description', description);
     updateMetaProperty('og:image', ogImage);
     if (canonical) {
-      updateMetaProperty('og:url', `https://franchisesgate.com${canonical}`);
+      updateMetaProperty('og:url', `https://franchisegate.sa${canonical}`);
     }
     
     // Cleanup function
